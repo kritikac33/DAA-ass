@@ -1,155 +1,90 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
 #include <string>
-
 using namespace std;
 
-struct Record
+void merge(string orders[], int left, int mid, int right)
 {
-    int age;
-    float height;
-    float weight;
-    float bmi;
-    string bmiClass;
-};
+    int i = left;
+    int j = mid + 1;
+    int k = 0;
 
-void merge(vector<Record> &arr, int left, int mid, int right)
-{
-    int n1 = mid - left + 1;
-    int n2 = right - mid;
+    int size = right - left + 1;
+    string *temp = new string[size];
 
-    vector<Record> L(n1), R(n2);
-
-    for (int i = 0; i < n1; i++)
-        L[i] = arr[left + i];
-
-    for (int j = 0; j < n2; j++)
-        R[j] = arr[mid + 1 + j];
-
-    int i = 0, j = 0, k = left;
-
-    while (i < n1 && j < n2)
+    while (i <= mid && j <= right)
     {
-        if (L[i].bmi <= R[j].bmi)
+        if (orders[i] <= orders[j])
         {
-            arr[k] = L[i];
+            temp[k] = orders[i];
             i++;
         }
         else
         {
-            arr[k] = R[j];
+            temp[k] = orders[j];
             j++;
         }
         k++;
     }
 
-    while (i < n1)
+    while (i <= mid)
     {
-        arr[k] = L[i];
+        temp[k] = orders[i];
         i++;
         k++;
     }
 
-    while (j < n2)
+    while (j <= right)
     {
-        arr[k] = R[j];
+        temp[k] = orders[j];
         j++;
         k++;
     }
+ 
+    for (i = 0; i < size; i++)
+    {
+        orders[left + i] = temp[i];
+    }
+
+    delete[] temp;
 }
 
-void mergeSort(vector<Record> &arr, int left, int right)
+void mergeSort(string orders[], int left, int right)
 {
-    if (left < right)
-    {
-        int mid = left + (right - left) / 2;
+    if (left >= right)
+        return;
 
-        mergeSort(arr, left, mid);
-        mergeSort(arr, mid + 1, right);
+    int mid = left + (right - left) / 2;
 
-        merge(arr, left, mid, right);
-    }
+    mergeSort(orders, left, mid);
+    mergeSort(orders, mid + 1, right);
+    merge(orders, left, mid, right);
 }
 
 int main()
 {
-    ifstream file("bmi.csv");
+    int n;
 
-    if (!file)
+    cout << "Enter number of customer orders: ";
+    cin >> n;
+
+    string *orders = new string[n];
+ 
+    cout << "Enter order timestamps (HH:MM):" << endl;
+
+    for (int i = 0; i < n; i++)
     {
-        cout << "Cannot open bmi.csv" << endl;
-        return 1;
+        cin >> orders[i];
     }
+    mergeSort(orders, 0, n - 1);
 
-    vector<Record> records;
-    string line;
+    cout << "\nSorted customer orders by timestamp:" << endl;
 
-    // Skip header
-    getline(file, line);
-
-    while (getline(file, line))
+    for (int i = 0; i < n; i++)
     {
-        if (line.empty())
-            continue;
-
-        stringstream ss(line);
-        Record r;
-        string temp;
-
-        getline(ss, temp, ',');
-        r.age = stoi(temp);
-
-        getline(ss, temp, ',');
-        r.height = stof(temp);
-
-        getline(ss, temp, ',');
-        r.weight = stof(temp);
-
-        getline(ss, temp, ',');
-        r.bmi = stof(temp);
-
-        getline(ss, r.bmiClass);
-
-        records.push_back(r);
+        cout << orders[i] << " ";
     }
+    cout << endl;
 
-    file.close();
-
-    if (!records.empty())
-    {
-        mergeSort(records, 0, records.size() - 1);
-    }
-
-    cout << "\nSorted by BMI\n\n";
-    cout << "Age\tHeight\tWeight\tBMI\tBMI Class\n";
-
-    for (const auto &r : records)
-    {
-        cout << r.age << "\t"
-             << r.height << "\t"
-             << r.weight << "\t"
-             << r.bmi << "\t"
-             << r.bmiClass << endl;
-    }
-
-    ofstream out("sorted_bmi.csv");
-
-    out << "Age,Height,Weight,Bmi,BmiClass\n";
-
-    for (const auto &r : records)
-    {
-        out << r.age << ","
-            << r.height << ","
-            << r.weight << ","
-            << r.bmi << ","
-            << r.bmiClass << "\n";
-    }
-
-    out.close();
-
-    cout << "\nSorted data saved to sorted_bmi.csv" << endl;
-
+    delete[] orders;
     return 0;
 }
